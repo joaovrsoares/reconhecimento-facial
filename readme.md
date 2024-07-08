@@ -8,6 +8,7 @@ Para fechar, basta pressionar 'q'.
 ## Pré-requisitos
 Para executar este projeto, é necessário o Python e as bibliotecas OpenCV e MediaPipe:
 ```bash
+git clone "https://github.com/joaovrsoares/reconhecimento-facial.git" && cd reconhecimento-facial
 sudo apt install python3 python3-pip
 pip install -r requirements.txt
 ```
