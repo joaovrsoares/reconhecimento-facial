@@ -1,34 +1,107 @@
-import cv2  # Puxa o opencv
-import mediapipe as mp  # Puxa o mediapipe como "mp"
+import face_recognition
+import os
+import sys
+import cv2
+import numpy as np
+from unidecode import unidecode
 
-# Inicializar o OpenCV e a webcam
-camera = cv2.VideoCapture(0)  # 0 é o ID da webcam
 
-# Inicializar o MediaPipe e os módulos de desenho e reconhecimento facial
-desenho = mp.solutions.drawing_utils
-reconhecimento_api = mp.solutions.face_detection
-reconhecimento_detector = reconhecimento_api.FaceDetection()
+# Função para calcular a confiança do reconhecimento facial
+def confianca_rosto(distancia_rosto, limiar_correspondencia_rosto=0.6):
+    intervalo = (1.0 - limiar_correspondencia_rosto)
+    valor_linear = (1.0 - distancia_rosto) / (intervalo * 2.0)
 
-while True:
-    # Ler as informações da webcam
-    verificador, frame = camera.read()
-    if not verificador:  # Se não conseguir ler a imagem, para o loop
-        break
+    if distancia_rosto > limiar_correspondencia_rosto:
+        return str(round(valor_linear * 100, 2)) + '%'
+    else:
+        valor = (valor_linear + ((1.0 - valor_linear) * ((valor_linear - 0.5) * 2) ** 0.2)) * 100  
+        return str(round(valor, 2)) + '%'
 
-    # Processar o frame com o MediaPipe para reconhecimento facial
-    rostos = reconhecimento_detector.process(frame)
-    if rostos.detections:
-        for rosto in rostos.detections:
-            # Desenhar o retângulo do rosto
-            desenho.draw_detection(frame, rosto)
 
-    # Inverter a câmera e exibir o frame na tela
-    frame = cv2.flip(frame, 1)
-    cv2.imshow('Reconhecimento facial', frame)
+# Classe para reconhecimento facial
+class ReconhecimentoFacial:
+    localizacoes_rosto = []
+    marcacoes_rosto = []
+    nomes_rosto = []
+    marcacoes_rosto_conhecidos = []  # Lista de marcações de rostos conhecidos tiradas da pasta faces
+    nomes_rosto_conhecidos = []  # Lista de nomes de rostos conhecidos tiradas da pasta faces
+    processar_frame_atual = True
 
-    # Esperar 5ms a cada atualização de frame (para não travar)
-    # Quando apertar a tecla 'q', para o loop
-    if cv2.waitKey(5) & 0xFF == ord('q'):
-        break
+    def __init__(self):
+        self.marcar_rostos()
 
-camera.release()  # Desligar a webcam
+    # Método para fazer as marcações dos rostos conhecidos
+    def marcar_rostos(self):
+        if not os.path.exists('faces') or not os.listdir('faces'):
+            sys.exit('Nenhum rosto conhecido encontrado na pasta.')
+        
+        for imagem in os.listdir('faces'):
+            # Carregar imagem do rosto e seu nome
+            imagem_rosto = face_recognition.load_image_file(f'faces/{imagem}')
+            # Remover extensão, acentos e passar primeira letra para maiúscula, e enviar para a lista de nomes
+            self.nomes_rosto_conhecidos.append(unidecode(imagem[:imagem.rfind('.')].title()))
+
+            # Pegar as marcações da face da pessoa, identificando ela
+            marcacao_rosto = face_recognition.face_encodings(imagem_rosto)[0]
+            # Envia essas marcações para a lista
+            self.marcacoes_rosto_conhecidos.append(marcacao_rosto)
+
+    # Método para executar o reconhecimento facial
+    def executar_reconhecimento(self):
+        captura_video = cv2.VideoCapture(0)
+
+        if not captura_video.isOpened():
+            sys.exit('Fonte de vídeo não encontrada')
+
+        while True:
+            ret, frame = captura_video.read()
+
+            # Só processar cada outro frame do video para economizar processamento
+            if self.processar_frame_atual:
+                frame_pequeno = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)  # Reduzir o tamanho do frame para 1/4
+                frame_pequeno_rgb = frame_pequeno[:, :, ::-1]  # Converter a imagem de BGR para RGB
+
+                # Encontrar todos os rostos no frame atual
+                self.localizacoes_rosto = face_recognition.face_locations(frame_pequeno_rgb)
+                self.marcacoes_rosto = face_recognition.face_encodings(frame_pequeno_rgb, self.localizacoes_rosto)
+
+                self.nomes_rosto = []
+                for marcacao_rosto in self.marcacoes_rosto:
+                    correspondencias = face_recognition.compare_faces(self.marcacoes_rosto_conhecidos, marcacao_rosto)
+                    nome = 'Desconhecido'
+                    confianca = ''
+
+                    distancias_rosto = face_recognition.face_distance(self.marcacoes_rosto_conhecidos, marcacao_rosto)
+                    indice_melhor_correspondencia = np.argmin(distancias_rosto)  # Indice da foto mais parecida na lista
+
+                    if correspondencias[indice_melhor_correspondencia]:
+                        nome = self.nomes_rosto_conhecidos[indice_melhor_correspondencia]
+                        confianca = confianca_rosto(distancias_rosto[indice_melhor_correspondencia])
+
+                    self.nomes_rosto.append(f'{nome} {confianca}')
+
+            # Exibir os resultados
+            self.processar_frame_atual = not self.processar_frame_atual
+            for (topo, direita, baixo, esquerda), nome in zip(self.localizacoes_rosto, self.nomes_rosto):
+                topo *= 4
+                direita *= 4
+                baixo *= 4
+                esquerda *= 4
+
+                cv2.rectangle(frame, (esquerda, topo), (direita, baixo + 20), (255, 0, 0), 2)
+                cv2.rectangle(frame, (esquerda, baixo + 20), (direita, baixo - 15), (255, 0, 0), -1)
+                cv2.putText(frame, nome, (esquerda + 5, baixo + 5), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 255), 1)
+
+            os.environ['QT_STYLE_OVERRIDE'] = 'Windows'  # Ajustar o estilo da janela para não dar erro em sistemas GTK
+            cv2.imshow('Reconhecimento Facial', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        captura_video.release()
+        cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    rf = ReconhecimentoFacial()
+    rf.executar_reconhecimento()
