@@ -1,0 +1,2 @@
+# Reconhecimento facial
+Projeto de reconhecimento facial para uso no Mundo SENAI 2024. Utilizando as bibliotecas face_recognition e OpenCV do Python 3.10, reconhece a face do visitante e mostra na tela.
