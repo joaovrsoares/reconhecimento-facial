@@ -93,7 +93,7 @@ while True:
         camera.release()  # Parar a captura de imagem
         cv2.destroyAllWindows()  # Fechar a janela da câmera
 
-        nome = input("Digite o primeiro nome: ").upper()
+        nome = input("Digite o primeiro nome: ").title()
         contato = input("Digite o contato: ")
 
         try:

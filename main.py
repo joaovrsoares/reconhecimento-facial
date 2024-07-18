@@ -3,6 +3,8 @@ import os
 import sys
 import cv2
 import numpy as np
+import mysql.connector
+import json
 from unidecode import unidecode
 
 
@@ -23,28 +25,43 @@ class ReconhecimentoFacial:
     localizacoes_rosto = []
     marcacoes_rosto = []
     nomes_rosto = []
-    marcacoes_rosto_conhecidos = []  # Lista de marcações de rostos conhecidos tiradas da pasta faces
-    nomes_rosto_conhecidos = []  # Lista de nomes de rostos conhecidos tiradas da pasta faces
+    marcacoes_rostos_conhecidos = []  # Lista de marcações de rostos conhecidos
+    nomes_rostos_conhecidos = []  # Lista de nomes de rostos conhecidos
+    contatos_rostos_conhecidos = []  # Lista de contatos de rostos conhecidos
     processar_frame_atual = True
 
     def __init__(self):
-        self.marcar_rostos()
+        self.carregar_rostos()
 
-    # Método para fazer as marcações dos rostos conhecidos
-    def marcar_rostos(self):
-        if not os.path.exists('faces') or not os.listdir('faces'):
-            sys.exit('Nenhum rosto conhecido encontrado na pasta.')
-        
-        for imagem in os.listdir('faces'):
-            # Carregar imagem do rosto e seu nome
-            imagem_rosto = face_recognition.load_image_file(f'faces/{imagem}')
-            # Remover extensão, acentos e passar primeira letra para maiúscula, e enviar para a lista de nomes
-            self.nomes_rosto_conhecidos.append(unidecode(imagem[:imagem.rfind('.')].title()))
+    # Carregar os rostos conhecidos do banco de dados, junto com os nomes e contatos
+    def carregar_rostos(self):
+        try:
+            db = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                password='Joooao16@',
+                database='rec_facial'
+            )
+            cursor = db.cursor()
+            
+            # Pegar os rostos conhecidos da tabela faces do banco de dados
+            cursor.execute('SELECT * FROM faces')
+            colunas = cursor.fetchall()
+            
+            for pessoa in colunas:
+                self.nomes_rostos_conhecidos.append(pessoa[1].title())
+                self.contatos_rostos_conhecidos.append(pessoa[2])
+                self.marcacoes_rostos_conhecidos.append(json.loads(pessoa[3]))
+                
+        except mysql.connector.Error as e:
+            print(f'Erro ao conectar ao banco de dados: {e}')
+            
+        finally:
+            if cursor:
+                cursor.close()
+            if db:
+                db.close()
 
-            # Pegar as marcações da face da pessoa, identificando ela
-            marcacao_rosto = face_recognition.face_encodings(imagem_rosto)[0]
-            # Envia essas marcações para a lista
-            self.marcacoes_rosto_conhecidos.append(marcacao_rosto)
 
     # Método para executar o reconhecimento facial
     def executar_reconhecimento(self):
@@ -67,15 +84,15 @@ class ReconhecimentoFacial:
 
                 self.nomes_rosto = []
                 for marcacao_rosto in self.marcacoes_rosto:
-                    correspondencias = face_recognition.compare_faces(self.marcacoes_rosto_conhecidos, marcacao_rosto)
+                    correspondencias = face_recognition.compare_faces(self.marcacoes_rostos_conhecidos, marcacao_rosto)
                     nome = 'Desconhecido'
                     confianca = ''
 
-                    distancias_rosto = face_recognition.face_distance(self.marcacoes_rosto_conhecidos, marcacao_rosto)
+                    distancias_rosto = face_recognition.face_distance(self.marcacoes_rostos_conhecidos, marcacao_rosto)
                     indice_melhor_correspondencia = np.argmin(distancias_rosto)  # Indice da foto mais parecida na lista
 
                     if correspondencias[indice_melhor_correspondencia]:
-                        nome = self.nomes_rosto_conhecidos[indice_melhor_correspondencia]
+                        nome = self.nomes_rostos_conhecidos[indice_melhor_correspondencia]
                         confianca = confianca_rosto(distancias_rosto[indice_melhor_correspondencia])
 
                     self.nomes_rosto.append(f'{nome} {confianca}')
