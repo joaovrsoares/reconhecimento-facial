@@ -7,7 +7,7 @@ import face_recognition
 
 
 def salvar_rosto(nome, foto):
-    try: # Conectar ao banco de dados, se existir o schema 'rec_facial'
+    try:  # Conectar ao banco de dados, se existir o schema 'rec_facial'
         db = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -16,7 +16,7 @@ def salvar_rosto(nome, foto):
         )
         db.close()
 
-    except mysql.connector.Error as e: 
+    except mysql.connector.Error as e:
 
         # Se não existir o schema 'rec_facial', criar o schema e a tabela 'faces'
         if e.errno == 1049:
@@ -24,7 +24,7 @@ def salvar_rosto(nome, foto):
             db = mysql.connector.connect(
                 host='localhost',
                 user='root',
-                password='' 
+                password=''
             )
             cursor = db.cursor()
             cursor.execute('CREATE DATABASE rec_facial')
@@ -45,7 +45,7 @@ def salvar_rosto(nome, foto):
         else:
             print(f'Erro ao conectar ao banco de dados: {e}')
             exit()
-    
+
     try:  # Conectar ao banco de dados
         db = mysql.connector.connect(
             host='localhost',
@@ -99,14 +99,13 @@ while True:
         try:
             # Pegar as marcações da face da pessoa, identificando ela
             marcacao_rosto = json.dumps(face_recognition.face_encodings(frame)[0].tolist())
-            
+
             # Salvar a imagem no banco de dados
             salvar_rosto(nome, marcacao_rosto)
-            
-            
+
             print("Imagem enviada para o banco de dados com sucesso")
             break
-        
+
         except Exception as e:
             print(f"Erro ao salvar a imagem no banco de dados: {e}")
             break

@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 import mysql.connector
 import json
-from unidecode import unidecode
 
 
 # Função para calcular a confiança do reconhecimento facial
@@ -33,7 +32,7 @@ class ReconhecimentoFacial:
     def __init__(self):
         self.carregar_rostos()
 
-    # Carregar os rostos conhecidos do banco de dados, junto com os nomes e contatos
+    # Carregar os rostos conhecidos do banco de dados, com os nomes e contatos
     def carregar_rostos(self):
         try:
             db = mysql.connector.connect(
@@ -55,13 +54,13 @@ class ReconhecimentoFacial:
                 
         except mysql.connector.Error as e:
             print(f'Erro ao conectar ao banco de dados: {e}')
+            sys.exit()
             
         finally:
             if cursor:
                 cursor.close()
             if db:
                 db.close()
-
 
     # Método para executar o reconhecimento facial
     def executar_reconhecimento(self):
