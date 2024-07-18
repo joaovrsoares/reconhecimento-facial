@@ -16,7 +16,7 @@ pip install -r requirements.txt
 #### Windows
 Ainda não testado, mas pode depender de ferramentas de compilação C++ para a biblioteca dlib.
 
-## A fazer:
+## A fazer
 - [ ] Arquivo separado para armazenar o login de acesso ao banco de dados, e incluir no .gitignore. Mais seguro e menos trabalho editando cada login separado.
 - [ ] Variável 'contato' ainda é placeholder, precisa ser utilizada. A ideia é enviar uma mensagem via aplicativo para a pessoa assim que for identificada.
-- [ ] Interface web.
+- [ ] Interface web para uso no Mundo SENAI.
