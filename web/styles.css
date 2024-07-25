@@ -60,7 +60,6 @@ button, input[type="submit"] {
     cursor: pointer;
 }
 
-/* if the screen is smaller than 800px, then show the video up on the screen and the text down */
 @media (max-width: 1000px) {
     .container {
         flex-direction: column;
