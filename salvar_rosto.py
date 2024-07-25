@@ -11,7 +11,7 @@ def salvar_rosto(nome, foto):
         db = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='',
+            password='Joooao16@',
             database='rec_facial'
         )
         db.close()
@@ -24,7 +24,7 @@ def salvar_rosto(nome, foto):
             db = mysql.connector.connect(
                 host='localhost',
                 user='root',
-                password=''
+                password='Joooao16@'
             )
             cursor = db.cursor()
             cursor.execute('CREATE DATABASE rec_facial')
@@ -50,7 +50,7 @@ def salvar_rosto(nome, foto):
         db = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='',
+            password='Joooao16@',
             database='rec_facial'
         )
         cursor = db.cursor()

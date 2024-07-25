@@ -1,0 +1,86 @@
+body {
+    margin: 0 6%;
+    padding: 2rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-family: Inter, Arial, sans-serif;
+}
+
+header {
+    background: #F6F8FA;
+    margin: -2rem calc(0px - (50vw - 50%)) 2rem;
+    padding: 2rem calc(50vw - 50%);
+}
+
+header > *:first-child {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+header > *:last-child {
+    margin-bottom: 0;
+}
+
+video {
+    transform: rotateY(180deg);
+}
+
+header ul {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+header li {
+    list-style-type: none;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+}
+
+.form-cadastro {
+    width: 100%;
+}
+
+input[type=text] {
+    width: 60%;
+}
+
+button, input[type="submit"] {
+    margin: 0.75rem 0;
+    padding: 6px 12px;
+    background: #2E6AB3;
+    font-size: 1rem;
+    color: white;
+    border: 0;
+    border-radius: 4px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+/* if the screen is smaller than 800px, then show the video up on the screen and the text down */
+@media (max-width: 1000px) {
+    .container {
+        flex-direction: column;
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+    }
+
+    header ul {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.75rem;
+    }
+
+    input[type=text] {
+        width: 100%;
+    }
+}
