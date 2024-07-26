@@ -29,6 +29,7 @@ header ul {
     display: flex;
     align-items: center;
     gap: 50px;
+    padding: 0;
 }
 
 header li {
