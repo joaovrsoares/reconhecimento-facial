@@ -68,6 +68,13 @@ class ReconhecimentoFacial:
 
         if not captura_video.isOpened():
             sys.exit('Fonte de vídeo não encontrada')
+        
+        url = 'http://127.0.0.1:5500/web/index.html'
+        
+        if sys.platform == 'win32':
+            os.system(f'start {url}')
+        else:
+            os.system(f'xdg-open {url}')
 
         while True:
             ret, frame = captura_video.read()
